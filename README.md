@@ -6,6 +6,10 @@ Simple header-only, arch-agnostic, RSP server library.
 
 See https://sourceware.org/gdb/onlinedocs/gdb/Remote-Protocol.html
 
+You can see usage of it here:
+- https://github.com/nsauzede/xtem
+- https://github.com/nsauzede/myrv
+
 # Test it
 
 Run the simple example, a fake x86 gdb stub that always returns 0 for everything,
