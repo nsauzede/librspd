@@ -60,6 +60,7 @@ rsp_read_mem(void* user, size_t addr, size_t len)
   char* buf = malloc(len * 2);
   memset(buf, '0' + (addr % 10), len * 2);
   rsp_send(rsp, buf, len * 2);
+  free(buf);
   return 0;
 }
 
