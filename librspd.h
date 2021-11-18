@@ -497,6 +497,7 @@ rsp_port(void* rsp_)
 int
 rsp_execute(void* rsp_)
 {
+  int ret = 0;
   rsp_private_t* rsp = (rsp_private_t*)rsp_;
   if (!rsp)
     return 1;
@@ -508,21 +509,24 @@ rsp_execute(void* rsp_)
     } else if (cmd == rsp_cmd_state) {
     } else if (cmd == rsp_cmd_question) {
       if (rsp->init.question) {
-        rsp->init.question(rsp->init.user);
+        ret = rsp->init.question(rsp->init.user);
+        if (ret) break;
       } else {
         printf("Unsupported question cb ?\n");
         exit(1);
       }
     } else if (cmd == rsp_cmd_cont) {
       if (rsp->init.cont) {
-        rsp->init.cont(rsp->init.user);
+        ret = rsp->init.cont(rsp->init.user);
+        if (ret) break;
       } else {
         printf("Unsupported cont cb ?\n");
         exit(1);
       }
     } else if (cmd == rsp_cmd_stepi) {
       if (rsp->init.stepi) {
-        rsp->init.stepi(rsp->init.user);
+        ret = rsp->init.stepi(rsp->init.user);
+        if (ret) break;
       } else {
         printf("Unsupported stepi cb ?\n");
         exit(1);
@@ -530,8 +534,8 @@ rsp_execute(void* rsp_)
     } else if (cmd == rsp_cmd_kill) {
       killed = 1;
       if (rsp->init.kill) {
-        rsp->init.kill(rsp->init.user);
-        // break;
+        ret = rsp->init.kill(rsp->init.user);
+        if (ret) break;
       } else {
         printf("Unsupported kill cb ?\n");
         // exit(1);
@@ -541,7 +545,7 @@ rsp_execute(void* rsp_)
       exit(1);
     }
   }
-  return 0;
+  return ret;
 }
 
 int
