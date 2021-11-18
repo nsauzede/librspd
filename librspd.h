@@ -26,6 +26,8 @@ rsp_init(rsp_init_t* rsp_init);
 int
 rsp_execute(void* user);
 int
+rsp_stopped(void* user);
+int
 rsp_send(void* user, const char* src, int size);
 int
 rsp_cleanup(void* rsp);
@@ -94,6 +96,9 @@ typedef struct
   // thread private
   rsp_state_t state;
   int ss, cs;
+
+  int running;
+  int cont;
 
 } rsp_private_t;
 
@@ -501,6 +506,10 @@ rsp_execute(void* rsp_)
   rsp_private_t* rsp = (rsp_private_t*)rsp_;
   if (!rsp)
     return 1;
+  dbg_printf("running=%d cont=%d\n", rsp->running, rsp->cont);
+  if (rsp->cont) {
+    return rsp->init.stepi(rsp->init.user);
+  }
   int killed = 0;
   while (!killed) {
     dbg_printf("Reading..\n");
@@ -516,6 +525,16 @@ rsp_execute(void* rsp_)
         exit(1);
       }
     } else if (cmd == rsp_cmd_cont) {
+      if (rsp->cont) {
+        printf("%s: cont already set ?\n", __func__);
+        exit(1);
+      }
+      rsp->cont = 1;
+      if (rsp->running) {
+        printf("%s: running already set ?\n", __func__);
+        exit(1);
+      }
+      rsp->running = 1;
       if (rsp->init.cont) {
         ret = rsp->init.cont(rsp->init.user);
         if (ret) break;
@@ -524,6 +543,11 @@ rsp_execute(void* rsp_)
         exit(1);
       }
     } else if (cmd == rsp_cmd_stepi) {
+      if (rsp->running) {
+        printf("%s: running already set ?\n", __func__);
+        exit(1);
+      }
+      rsp->running = 1;
       if (rsp->init.stepi) {
         ret = rsp->init.stepi(rsp->init.user);
         if (ret) break;
@@ -546,6 +570,23 @@ rsp_execute(void* rsp_)
     }
   }
   return ret;
+}
+
+int
+rsp_stopped(void* rsp_)
+{
+  rsp_private_t* rsp = (rsp_private_t*)rsp_;
+  dbg_printf("\n");
+  if (!rsp->running) {
+    printf("%s: running not set ?\n", __func__);
+    exit(1);
+  }
+  rsp->running = 0;
+  if (rsp->cont) {
+    dbg_printf("clear cont\n");
+    rsp->cont = 0;
+  }
+  return rsp->init.question(rsp->init.user);
 }
 
 int

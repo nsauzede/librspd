@@ -1,4 +1,5 @@
 TARGET=rspd
+TARGET+=rspd2
 
 CFLAGS:=-Wall -Werror -Wextra
 CFLAGS+=-g
