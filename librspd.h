@@ -97,8 +97,8 @@ typedef struct
   rsp_state_t state;
   int ss, cs;
 
-  int running;
-  int cont;
+  int active;
+  int stopped;
 
 } rsp_private_t;
 
@@ -506,11 +506,18 @@ rsp_execute(void* rsp_)
   rsp_private_t* rsp = (rsp_private_t*)rsp_;
   if (!rsp)
     return 1;
-  dbg_printf("running=%d cont=%d\n", rsp->running, rsp->cont);
-  if (rsp->cont) {
-    return rsp->init.stepi(rsp->init.user);
-  }
   int killed = 0;
+  while (!ret) {
+  dbg_printf("active=%d stopped=%d\n", rsp->active, rsp->stopped);
+  if (rsp->active) {
+    ret =  rsp->init.stepi(rsp->init.user);
+  dbg_printf("active stepi returned %d\n", ret);
+        if (ret < 0) {
+        dbg_printf("calling stopped\n");
+        ret = rsp_stopped(rsp_);
+        }
+        else {if (ret) break;}
+  }
   while (!killed) {
     dbg_printf("Reading..\n");
     rsp_cmd_t cmd = rsp_read_from_thr(rsp);
@@ -525,31 +532,15 @@ rsp_execute(void* rsp_)
         exit(1);
       }
     } else if (cmd == rsp_cmd_cont) {
-      if (rsp->cont) {
-        printf("%s: cont already set ?\n", __func__);
-        exit(1);
-      }
-      rsp->cont = 1;
-      if (rsp->running) {
-        printf("%s: running already set ?\n", __func__);
-        exit(1);
-      }
-      rsp->running = 1;
-      if (rsp->init.cont) {
-        ret = rsp->init.cont(rsp->init.user);
-        if (ret) break;
-      } else {
-        printf("Unsupported cont cb ?\n");
-        exit(1);
-      }
+      rsp->active = 1;
+      break;
     } else if (cmd == rsp_cmd_stepi) {
-      if (rsp->running) {
-        printf("%s: running already set ?\n", __func__);
-        exit(1);
-      }
-      rsp->running = 1;
       if (rsp->init.stepi) {
+        dbg_printf("calling stepi\n");
         ret = rsp->init.stepi(rsp->init.user);
+        dbg_printf("stepi returned %d\n", ret);
+        dbg_printf("calling stopped\n");
+        ret = rsp_stopped(rsp_);
         if (ret) break;
       } else {
         printf("Unsupported stepi cb ?\n");
@@ -559,6 +550,7 @@ rsp_execute(void* rsp_)
       killed = 1;
       if (rsp->init.kill) {
         ret = rsp->init.kill(rsp->init.user);
+        dbg_printf("kill returned %d\n", ret);
         if (ret) break;
       } else {
         printf("Unsupported kill cb ?\n");
@@ -569,6 +561,9 @@ rsp_execute(void* rsp_)
       exit(1);
     }
   }
+  }
+  dbg_printf("ret=%d\n", ret);
+  if (killed) return -1;
   return ret;
 }
 
@@ -577,15 +572,8 @@ rsp_stopped(void* rsp_)
 {
   rsp_private_t* rsp = (rsp_private_t*)rsp_;
   dbg_printf("\n");
-  if (!rsp->running) {
-    printf("%s: running not set ?\n", __func__);
-    exit(1);
-  }
-  rsp->running = 0;
-  if (rsp->cont) {
-    dbg_printf("clear cont\n");
-    rsp->cont = 0;
-  }
+  rsp->active = 0;
+  rsp->stopped = 1;
   return rsp->init.question(rsp->init.user);
 }
 
