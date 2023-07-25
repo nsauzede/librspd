@@ -49,7 +49,7 @@ rsp_get_regs(void* user)
 {
   void* rsp = *(void**)user;
   char buf[LEN64 + 1];
-  int len = xlen == 64 ? LEN64 : LEN32;
+  size_t len = xlen == 64 ? LEN64 : LEN32;
   memset(buf, '0', len);
   rsp_send(rsp, buf, len);
   return 0;
@@ -60,7 +60,7 @@ rsp_read_mem(void* user, size_t addr, size_t len)
 {
   void* rsp = *(void**)user;
   char* buf = malloc(len * 2);
-  memset(buf, '0' + (addr % 10), len * 2);
+  memset(buf, '0' + (int)(addr % 10), len * 2);
   rsp_send(rsp, buf, len * 2);
   free(buf);
   return 0;

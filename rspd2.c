@@ -8,7 +8,7 @@
 
 #include "librspd.h"
 
-static int reg = 0;
+static uint32_t reg = 0;
 static int count = 0;
 // fake low-level 1 cycle run (fetch/decode/execute)
 // returns 1 if cycle has been run correctly
@@ -74,9 +74,9 @@ rsp_get_regs(void* user)
 {
   void* rsp = *(void**)user;
   char buf[LEN64 + 1];
-  int len = xlen == 64 ? LEN64 : LEN32;
+  size_t len = xlen == 64 ? LEN64 : LEN32;
   memset(buf, '0', len);
-  for (int i = 0; i < len / 8; i++) {
+  for (size_t i = 0; i < len / 8; i++) {
     uint32_t val = htonl(reg);
     sprintf(buf + i * 8, "%08" PRIx32, val);
   }
@@ -89,7 +89,7 @@ rsp_read_mem(void* user, size_t addr, size_t len)
 {
   void* rsp = *(void**)user;
   char* buf = malloc(len * 2);
-  memset(buf, '0' + (addr % 10), len * 2);
+  memset(buf, '0' + (int)(addr % 10), len * 2);
   rsp_send(rsp, buf, len * 2);
   free(buf);
   return 0;

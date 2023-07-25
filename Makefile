@@ -2,6 +2,7 @@ TARGET=rspd
 TARGET+=rspd2
 
 CFLAGS:=-Wall -Werror -Wextra
+CFLAGS+=-Wconversion -Wsign-conversion
 CFLAGS+=-g
 CFLAGS+=-O0
 

@@ -28,7 +28,7 @@ rsp_execute(void* user);
 int
 rsp_stopped(void* user);
 int
-rsp_send(void* user, const char* src, int size);
+rsp_send(void* user, const char* src, size_t size);
 int
 rsp_cleanup(void* rsp);
 
@@ -139,11 +139,11 @@ rsp_write_cs(rsp_private_t* rsp, const void* buf, size_t count)
 }
 
 int
-rsp_send(void* rsp_, const char* src, int size)
+rsp_send(void* rsp_, const char* src, size_t size)
 {
   rsp_private_t* rsp = (rsp_private_t*)rsp_;
   int csum = 0;
-  for (int i = 0; i < size; i++) {
+  for (size_t i = 0; i < size; i++) {
     csum += src[i];
   }
   csum &= 0xff;
@@ -394,7 +394,7 @@ rsp_thread(void* arg)
   }
   struct sockaddr_in sa;
   sa.sin_family = AF_INET;
-  sa.sin_port = htons(rsp->init.port);
+  sa.sin_port = htons((uint16_t)rsp->init.port);
   sa.sin_addr.s_addr = INADDR_ANY;
   if (-1 == bind(rsp->ss, (struct sockaddr*)&sa, sizeof(sa))) {
     perror("bind");
