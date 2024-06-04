@@ -35,7 +35,7 @@ rsp_cleanup(void* rsp);
 #ifndef LIBRSP_HEADER_ONLY
 
 /* Private APIs / Implementation - Don't use, might change */
-#define RSP_DEBUG
+//#define RSP_DEBUG
 
 #include <inttypes.h>
 #include <stdlib.h>
@@ -49,8 +49,8 @@ rsp_cleanup(void* rsp);
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#ifdef RSP_DEBUG
 static int rsp_debug = 0;
+#ifdef RSP_DEBUG
 #define dbg_printf(...)                                                        \
   do {                                                                         \
     if (rsp_debug) {                                                           \
